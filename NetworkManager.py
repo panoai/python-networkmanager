@@ -172,7 +172,7 @@ class NMDbusInterfaceType(type):
         def set_func(self, value):
             value = fixups.to_dbus(klass, 'Set', name, value, attrib['type'])
             try:
-                return self.proxy.Set(interface, name, value, dbus_interface='org.freedesktop.DBus.Properties')
+                return self.proxy.Set(interface, name, value, dbus_interface='org.freedesktop.DBus.Properties', signature='ssv')
             except dbus.exceptions.DBusException as e:
                 if e.get_dbus_name() == 'org.freedesktop.DBus.Error.UnknownMethod':
                     raise ObjectVanished(self)
