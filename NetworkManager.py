@@ -192,8 +192,10 @@ class NMDbusInterfaceType(type):
             argname = arg.attrib['name']
             signature = arg.attrib['type']
             code += "    %s = fixups.to_dbus('%s', '%s', '%s', %s, '%s')\n" % (argname, klass, name, argname, argname, signature)
+        in_sig = ''.join([x.attrib['type'] for x in args])
+        call_args = argstr + ", " if argstr else ""
         code += "    try:\n"
-        code += "        %s = dbus.Interface(self.proxy, '%s').%s(%s)\n" % (outargstr, interface, name, argstr)
+        code += "        %s = dbus.Interface(self.proxy, '%s').%s(%ssignature='%s')\n" % (outargstr, interface, name, call_args, in_sig)
         code += "    except dbus.exceptions.DBusException as e:\n"
         code += "        if e.get_dbus_name() == 'org.freedesktop.DBus.Error.UnknownMethod':\n"
         code += "            raise ObjectVanished(self)\n"
