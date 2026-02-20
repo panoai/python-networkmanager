@@ -226,7 +226,7 @@ class NMDbusInterface(object):
     def __new__(klass, object_path=None):
         # If we didn't introspect this one at definition time, let's do it now.
         if object_path and not klass.introspection_data:
-            proxy = dbus.SystemBus().get_object(klass.dbus_service, object_path)
+            proxy = dbus.SystemBus().get_object(klass.dbus_service, object_path, introspect=False)
             klass.introspection_data = proxy.Introspect(dbus_interface='org.freedesktop.DBus.Introspectable')
             root = etree.fromstring(klass.introspection_data)
             for element in root:
@@ -260,7 +260,7 @@ class NMDbusInterface(object):
     @property
     def proxy(self):
         if not self._proxy:
-            self._proxy = dbus.SystemBus().get_object(self.dbus_service, self.object_path, follow_name_owner_changes=True)
+            self._proxy = dbus.SystemBus().get_object(self.dbus_service, self.object_path, introspect=False)
             self._proxy.created = time.time()
         elif self._proxy.created < self.last_disconnect:
             if self.is_transient:
@@ -268,7 +268,7 @@ class NMDbusInterface(object):
             obj = type(self)(self.object_path)
             if obj.object_path != self.object_path:
                 self.object_path = obj.object_path
-            self._proxy = dbus.SystemBus().get_object(self.dbus_service, self.object_path)
+            self._proxy = dbus.SystemBus().get_object(self.dbus_service, self.object_path, introspect=False)
             self._proxy.created = time.time()
         return self._proxy
 
@@ -329,7 +329,7 @@ class ActiveConnection(TransientNMDbusInterface):
     def __new__(klass, object_path):
         if klass == ActiveConnection:
             # Automatically turn this into a VPNConnection if needed
-            obj = dbus.SystemBus().get_object(klass.dbus_service, object_path)
+            obj = dbus.SystemBus().get_object(klass.dbus_service, object_path, introspect=False)
             if obj.Get('org.freedesktop.NetworkManager.Connection.Active', 'Vpn', dbus_interface='org.freedesktop.DBus.Properties', signature='ss'):
                 return VPNConnection.__new__(VPNConnection, object_path)
         return super(ActiveConnection, klass).__new__(klass, object_path)
@@ -346,7 +346,7 @@ class Device(NMDbusInterface):
         if klass == Device:
             # Automatically specialize the device
             try:
-                obj = dbus.SystemBus().get_object(klass.dbus_service, object_path)
+                obj = dbus.SystemBus().get_object(klass.dbus_service, object_path, introspect=False)
                 klass = device_class(obj.Get('org.freedesktop.NetworkManager.Device', 'DeviceType', dbus_interface='org.freedesktop.DBus.Properties', signature='ss'))
                 return klass.__new__(klass, object_path)
             except ObjectVanished:
